@@ -4,18 +4,15 @@ const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 const app = require('./app');
 
-const DB = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
-);
+const DB = "mongodb+srv://mohsenhaidari0766:admin123@cluster0.n1zbq4y.mongodb.net/natoursPractice?retryWrites=true&w=majority";
 
 mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: false
-  })
-  .then(() => console.log('DB connection successful!'));
+  .connect(DB)
+  .then(() => console.log('DB connection successful!'))
+  .catch((error) => {
+    console.log(error);
+  });
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
