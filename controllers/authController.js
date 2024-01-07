@@ -108,7 +108,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         await sendEmail({
             email: user.email,
             subject: 'Password Reset Token (valid for 10 minutes)',
-            message: `Use the following token to reset your password: ${resetToken}`,
+            message,
         });
 
         res.status(200).json({
@@ -145,5 +145,23 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
         status: 'success',
         token
     })
-}
-)
+})
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+    const user = await User.findById(req.user.id).select('+password');
+
+    if (!(await user.correctPassword(req.body.passwordConfirm, user.password))) {
+        return next(new AppError("Your current Password is wrong"), 401);   
+    }
+
+    user.password = req.body.password
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
+    
+    const token = signToken(user._id);
+
+    res.status(200).json({
+        status: 'success',
+        token
+    })
+})
