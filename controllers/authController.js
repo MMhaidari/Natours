@@ -6,6 +6,15 @@ const jwt = require('jsonwebtoken')
 const AppError = require('./../utils/appError')
 const sendEmail = require('./../utils/email')
 
+const createSendToken = (user, statusCode, res) => {
+    const token = signToken(user._id);
+    res.cookie('jwt', token, {
+        expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+        )
+    })
+}
+
 const signToken = async (user) => {
     const token = jwt.sign({
         id: user._id,
@@ -22,15 +31,7 @@ exports.signup = catchAsync(async (req, res, next) => {
         passwordConfirm: req.body.passwordConfirm
     });
 
-    const token = await signToken(newUser);
-
-    res.status(201).json({
-        status: 'success',
-        token,
-        data: {
-            user: newUser
-        }
-    });
+    createSendToken(newUser, 200, res)
 });
 
 
@@ -47,12 +48,7 @@ exports.login = catchAsync(async (req, res, next) => {
         return next(new AppError("Incorrect email or password", 401));
     }
 
-    const token = signToken(user._id);
-
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(req.user, 200, res)
 })
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -139,12 +135,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     user.passwordResetExpires = undefined
     await user.save();
 
-    const token = signToken(user._id);
-
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(user, 200, res)
 })
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -158,10 +149,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     user.passwordConfirm = req.body.passwordConfirm;
     await user.save();
     
-    const token = signToken(user._id);
-
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    createSendToken(user, 200, res)
 })
